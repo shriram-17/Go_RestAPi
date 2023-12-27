@@ -46,12 +46,13 @@ func main() {
 	router.POST("/users", func(c *gin.Context) {
 		createUser(c, db)
 	})
-	router.POST("/users/:id", func(context *gin.Context) {
-		GetUserbyId(context, db)
-	})
 
 	router.GET("/users/all", func(context *gin.Context) {
 		GetUsers(context, db)
+	})
+
+	router.GET("/users/:id", func(context *gin.Context) {
+		GetUserbyId(context, db)
 	})
 
 	router.PATCH("/users", func(context *gin.Context) {
@@ -101,19 +102,18 @@ func GetUsers(c *gin.Context, db *gorm.DB) {
 }
 
 func GetUserbyId(c *gin.Context, db *gorm.DB) {
-
 	var user User
 	id := c.Param("id")
 
-	result := db.Find(user).Where("id = ?", id)
+	result := db.First(&user, id)
 
 	if result.Error != nil {
 		c.JSON(http.StatusOK, gin.H{"error": result.Error})
 		return
 	}
+
 	c.JSON(http.StatusOK, user)
 	return
-
 }
 
 func UpdateUser(c *gin.Context, db *gorm.DB) {
@@ -138,8 +138,8 @@ func UpdateUser(c *gin.Context, db *gorm.DB) {
 }
 
 func DeleteUser(c *gin.Context, db *gorm.DB) {
-	idStr := c.Query("id")
 
+	idStr := c.Query("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 
 	if err != nil {
@@ -148,10 +148,10 @@ func DeleteUser(c *gin.Context, db *gorm.DB) {
 	}
 
 	result := db.Where("ID = ?", id).Delete(&User{})
-
 	if result != nil {
 		c.JSON(http.StatusOK, gin.H{"error": result.Error})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"Message": "Deleted Successfully"})
+	return
 }
